@@ -9,30 +9,46 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 
+class AddEditStudentFragment : Fragment() {
 
-class AddStudentFragment : Fragment() {
+    private lateinit var editTextName: EditText
+    private lateinit var editTextId: EditText
+    private lateinit var buttonSave: Button
+    private var student: StudentModel? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_add_student, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_add_edit_student, container, false)
+        editTextName = view.findViewById(R.id.edit_text_name)
+        editTextId = view.findViewById(R.id.edit_text_id)
+        buttonSave = view.findViewById(R.id.button_save)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val nameEditText: EditText = view.findViewById(R.id.edit_text_name)
-        val idEditText: EditText = view.findViewById(R.id.edit_text_id)
-        val saveButton: Button = view.findViewById(R.id.btn_save)
-
-        saveButton.setOnClickListener {
-            val name = nameEditText.text.toString()
-            val id = idEditText.text.toString()
-
-            if (name.isNotEmpty() && id.isNotEmpty()) {
-                (activity as MainActivity).addStudent(StudentModel(name, id))
-                findNavController().popBackStack()
-            }
+        student = arguments?.getSerializable("student") as? StudentModel
+        student?.let {
+            editTextName.setText(it.studentName)
+            editTextId.setText(it.studentId)
         }
+
+        buttonSave.setOnClickListener {
+            val name = editTextName.text.toString()
+            val id = editTextId.text.toString()
+            if (student == null) {
+                // Add new student
+                val newStudent = StudentModel(name, id)
+                // Pass the new student back to StudentListFragment
+                findNavController().previousBackStackEntry?.savedStateHandle?.set("newStudent", newStudent)
+            } else {
+                // Edit existing student
+                student?.studentName = name
+                student?.studentId = id
+                // Pass the edited student back to StudentListFragment
+                findNavController().previousBackStackEntry?.savedStateHandle?.set("editedStudent", student)
+            }
+            findNavController().popBackStack()
+        }
+
+        return view
     }
 }
